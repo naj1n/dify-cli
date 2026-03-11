@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 
 	"dify-cli/pkg/config"
@@ -20,13 +21,15 @@ var setHostCmd = &cobra.Command{
 	Short: "Set the Dify instance host URL",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		cfg, err := config.Load()
-		if err != nil {
-			return err
-		}
 		host := strings.TrimRight(args[0], "/")
-		cfg.Host = host
-		if err := cfg.Save(); err != nil {
+		u, err := url.Parse(host)
+		if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
+			return fmt.Errorf("invalid host URL: must start with http:// or https://")
+		}
+		if err := config.LockedUpdate(func(cfg *config.Config) error {
+			cfg.Host = host
+			return nil
+		}); err != nil {
 			return err
 		}
 		fmt.Printf("Host set to: %s\n", host)

@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"syscall"
 )
 
 type Config struct {
@@ -69,10 +70,58 @@ func (c *Config) Save() error {
 	}
 
 	p := filepath.Join(dir, "config.json")
-	if err := os.WriteFile(p, data, 0o600); err != nil {
+	f, err := os.CreateTemp(dir, "config-*.tmp")
+	if err != nil {
+		return fmt.Errorf("failed to write config: %w", err)
+	}
+	tmp := f.Name()
+	if _, err := f.Write(data); err != nil {
+		_ = f.Close()
+		_ = os.Remove(tmp)
+		return fmt.Errorf("failed to write config: %w", err)
+	}
+	if err := f.Close(); err != nil {
+		_ = os.Remove(tmp)
+		return fmt.Errorf("failed to write config: %w", err)
+	}
+	if err := os.Rename(tmp, p); err != nil {
+		_ = os.Remove(tmp)
 		return fmt.Errorf("failed to write config: %w", err)
 	}
 	return nil
+}
+
+// LockedUpdate atomically loads, modifies, and saves the config under an
+// exclusive file lock. This prevents concurrent processes from losing updates.
+func LockedUpdate(fn func(*Config) error) error {
+	dir, err := configDir()
+	if err != nil {
+		return err
+	}
+	if err := os.MkdirAll(dir, 0o750); err != nil {
+		return fmt.Errorf("failed to create config directory: %w", err)
+	}
+
+	lockPath := filepath.Join(dir, "config.lock")
+	lockFile, err := os.OpenFile(lockPath, os.O_CREATE|os.O_RDWR, 0o600)
+	if err != nil {
+		return fmt.Errorf("failed to open lock file: %w", err)
+	}
+	defer func() { _ = lockFile.Close() }()
+
+	if err := syscall.Flock(int(lockFile.Fd()), syscall.LOCK_EX); err != nil {
+		return fmt.Errorf("failed to acquire config lock: %w", err)
+	}
+	defer func() { _ = syscall.Flock(int(lockFile.Fd()), syscall.LOCK_UN) }()
+
+	cfg, err := Load()
+	if err != nil {
+		return err
+	}
+	if err := fn(cfg); err != nil {
+		return err
+	}
+	return cfg.Save()
 }
 
 func (c *Config) ValidateHost() error {
