@@ -1,0 +1,22 @@
+# Binary
+dify
+dify.exe
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# JS remnants (should not exist)
+node_modules/
+package.json
+package-lock.json
+
+# Test/temp
+*.test
+*.out
