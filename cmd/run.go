@@ -117,7 +117,8 @@ func runStreaming(c *client.Client, inputs map[string]interface{}) error {
 		fmt.Fprintln(stderr, "---")
 	}
 
-	return c.RunWorkflowStream(inputs, runUser, func(event client.SSEEvent) {
+	var streamErr error
+	netErr := c.RunWorkflowStream(inputs, runUser, func(event client.SSEEvent) {
 		switch event.Event {
 		case "workflow_started":
 			fmt.Fprintln(stderr, "[workflow started]")
@@ -167,12 +168,29 @@ func runStreaming(c *client.Client, inputs map[string]interface{}) error {
 				fmt.Fprintln(stderr, "\n---")
 				fmt.Fprintf(stderr, "[workflow %s | %.2fs | %d tokens]\n",
 					e.Data.Status, e.Data.ElapsedTime, e.Data.TotalTokens)
+				if e.Data.Status != "succeeded" {
+					streamErr = fmt.Errorf("workflow %s", e.Data.Status)
+				}
+			}
+
+		case "error":
+			var e struct {
+				Message string `json:"message"`
+				Code    string `json:"code"`
+			}
+			if err := json.Unmarshal([]byte(event.Data), &e); err == nil {
+				streamErr = fmt.Errorf("server error: %s (code: %s)", e.Message, e.Code)
+				fmt.Fprintf(stderr, "[error: %s]\n", e.Message)
 			}
 
 		case "ping":
 			// keepalive
 		}
 	})
+	if netErr != nil {
+		return netErr
+	}
+	return streamErr
 }
 
 func init() {

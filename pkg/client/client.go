@@ -6,11 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"mime/multipart"
 	"net/http"
 	"net/url"
-	"os"
-	"path/filepath"
 	"strings"
 	"time"
 )
@@ -199,41 +196,6 @@ func (c *Client) GetWorkflowLogs(params map[string]string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return c.do(req)
-}
-
-func (c *Client) UploadFile(filePath, user string) ([]byte, error) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open file: %w", err)
-	}
-	defer func() { _ = file.Close() }()
-
-	var buf bytes.Buffer
-	writer := multipart.NewWriter(&buf)
-
-	part, err := writer.CreateFormFile("file", filepath.Base(filePath))
-	if err != nil {
-		return nil, err
-	}
-	if _, err := io.Copy(part, file); err != nil {
-		return nil, err
-	}
-	if err := writer.WriteField("user", user); err != nil {
-		return nil, err
-	}
-	if err := writer.Close(); err != nil {
-		return nil, err
-	}
-
-	u := c.baseURL + "/files/upload"
-	req, err := http.NewRequest(http.MethodPost, u, &buf)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Authorization", "Bearer "+c.apiKey)
-	req.Header.Set("Content-Type", writer.FormDataContentType())
-
 	return c.do(req)
 }
 

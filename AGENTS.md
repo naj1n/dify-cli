@@ -6,7 +6,7 @@ Guidance for AI agents working on this codebase.
 
 Dify CLI is a command-line tool for interacting with Dify managed or self-hosted instances.
 It implements the Dify Workflow App API, supporting workflow execution (blocking & streaming),
-file uploads, log retrieval, and more.
+log retrieval, and more.
 
 One CLI can manage multiple workflow apps under a shared host. Each app is registered
 with a name and its own API key.
@@ -15,6 +15,7 @@ with a name and its own API key.
 
 - **Language**: Go
 - **CLI Framework**: [cobra](https://github.com/spf13/cobra)
+- **Platforms**: macOS, Linux (Windows not supported — uses `syscall.Flock` for config locking)
 - **No TUI** — pure CLI with stdout/stderr output
 
 ## Project Structure
@@ -32,7 +33,6 @@ dify-cli/
 │   ├── stop.go             # POST /workflows/tasks/:task_id/stop
 │   ├── logs.go             # GET /workflows/logs
 │   ├── detail.go           # GET /workflows/run/:workflow_run_id
-│   └── upload.go           # POST /files/upload
 ├── pkg/
 │   ├── client/
 │   │   └── client.go       # Dify HTTP API client (stateless, concurrent-safe)
@@ -77,7 +77,6 @@ dify-cli/
 | `dify stop <task_id> [-a app]` | Stop a streaming task |
 | `dify detail <run_id> [-a app]` | Get workflow run details |
 | `dify logs [-a app] [--status ...]` | List workflow execution logs |
-| `dify upload <file> [-a app]` | Upload a file for workflow input |
 
 ## Configuration
 
@@ -103,7 +102,6 @@ Implemented endpoints:
 - `POST /workflows/run` — Execute Workflow
 - `GET /workflows/run/:workflow_run_id` — Get Workflow Run Detail
 - `POST /workflows/tasks/:task_id/stop` — Stop Generate
-- `POST /files/upload` — File Upload
 - `GET /workflows/logs` — Get Workflow Logs
 - `GET /info` — Get Application Basic Information
 - `GET /parameters` — Get Application Parameters
