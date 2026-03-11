@@ -59,7 +59,7 @@ func (c *Config) Save() error {
 	if err != nil {
 		return err
 	}
-	if err := os.MkdirAll(dir, 0o755); err != nil {
+	if err := os.MkdirAll(dir, 0o750); err != nil {
 		return fmt.Errorf("failed to create config directory: %w", err)
 	}
 
@@ -94,7 +94,9 @@ func (c *Config) ResolveAPIKey(directKey, appName string) (string, error) {
 		name = c.DefaultApp
 	}
 	if name == "" {
-		return "", fmt.Errorf("no app specified. Use -a <app_name>, -k <api_key>, or set a default: dify app default <name>")
+		return "", fmt.Errorf(
+			"no app specified. Use -a <app_name>, -k <api_key>, or set a default: dify app default <name>",
+		)
 	}
 
 	key, ok := c.Apps[name]

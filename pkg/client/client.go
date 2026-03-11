@@ -16,6 +16,7 @@ import (
 )
 
 type Client struct {
+	host       string
 	baseURL    string
 	apiKey     string
 	httpClient *http.Client
@@ -27,10 +28,16 @@ func New(host, apiKey string) *Client {
 		base += "/v1"
 	}
 	return &Client{
+		host:       strings.TrimRight(host, "/"),
 		baseURL:    base,
 		apiKey:     apiKey,
 		httpClient: &http.Client{Timeout: 5 * time.Minute},
 	}
+}
+
+// Host returns the base host URL (without /v1 suffix).
+func (c *Client) Host() string {
+	return c.host
 }
 
 func (c *Client) newRequest(method, path string, body io.Reader) (*http.Request, error) {
@@ -51,7 +58,7 @@ func (c *Client) do(req *http.Request) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -73,7 +80,10 @@ type RunWorkflowRequest struct {
 	Files        []interface{}          `json:"files,omitempty"`
 }
 
-func (c *Client) RunWorkflow(inputs map[string]interface{}, user, responseMode string) ([]byte, error) {
+func (c *Client) RunWorkflow(
+	inputs map[string]interface{},
+	user, responseMode string,
+) ([]byte, error) {
 	body := RunWorkflowRequest{
 		Inputs:       inputs,
 		ResponseMode: responseMode,
@@ -98,7 +108,11 @@ type SSEEvent struct {
 
 type StreamCallback func(event SSEEvent)
 
-func (c *Client) RunWorkflowStream(inputs map[string]interface{}, user string, callback StreamCallback) error {
+func (c *Client) RunWorkflowStream(
+	inputs map[string]interface{},
+	user string,
+	callback StreamCallback,
+) error {
 	body := RunWorkflowRequest{
 		Inputs:       inputs,
 		ResponseMode: "streaming",
@@ -119,7 +133,7 @@ func (c *Client) RunWorkflowStream(inputs map[string]interface{}, user string, c
 	if err != nil {
 		return fmt.Errorf("request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		errBody, _ := io.ReadAll(resp.Body)
@@ -159,7 +173,11 @@ func (c *Client) StopWorkflow(taskID, user string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	req, err := c.newRequest(http.MethodPost, "/workflows/tasks/"+taskID+"/stop", bytes.NewReader(data))
+	req, err := c.newRequest(
+		http.MethodPost,
+		"/workflows/tasks/"+taskID+"/stop",
+		bytes.NewReader(data),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -189,7 +207,7 @@ func (c *Client) UploadFile(filePath, user string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	var buf bytes.Buffer
 	writer := multipart.NewWriter(&buf)
@@ -204,7 +222,9 @@ func (c *Client) UploadFile(filePath, user string) ([]byte, error) {
 	if err := writer.WriteField("user", user); err != nil {
 		return nil, err
 	}
-	writer.Close()
+	if err := writer.Close(); err != nil {
+		return nil, err
+	}
 
 	u := c.baseURL + "/files/upload"
 	req, err := http.NewRequest(http.MethodPost, u, &buf)

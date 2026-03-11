@@ -74,8 +74,13 @@ Examples:
 			return nil
 		}
 
-		fmt.Printf("Page %d/%d (total: %d, has_more: %v)\n\n",
-			result.Page, (result.Total+result.Limit-1)/max(result.Limit, 1), result.Total, result.HasMore)
+		fmt.Printf(
+			"Page %d/%d (total: %d, has_more: %v)\n\n",
+			result.Page,
+			(result.Total+result.Limit-1)/max(result.Limit, 1),
+			result.Total,
+			result.HasMore,
+		)
 
 		for _, entry := range result.Data {
 			r := entry.WorkflowRun
@@ -104,7 +109,8 @@ Examples:
 func init() {
 	addAppFlags(logsCmd)
 	logsCmd.Flags().StringVar(&logsKeyword, "keyword", "", "Search keyword")
-	logsCmd.Flags().StringVar(&logsStatus, "status", "", "Filter by status: succeeded/failed/stopped")
+	logsCmd.Flags().
+		StringVar(&logsStatus, "status", "", "Filter by status: succeeded/failed/stopped")
 	logsCmd.Flags().IntVar(&logsPage, "page", 1, "Page number")
 	logsCmd.Flags().IntVar(&logsLimit, "limit", 20, "Items per page")
 	rootCmd.AddCommand(logsCmd)

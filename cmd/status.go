@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"dify-cli/pkg/config"
-
 	"github.com/spf13/cobra"
 )
 
@@ -19,11 +17,6 @@ Examples:
   dify status -a my-app        # specific app
   dify status -k app-xxxxx     # direct API key`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		cfg, err := config.Load()
-		if err != nil {
-			return err
-		}
-
 		c, err := newClient()
 		if err != nil {
 			return err
@@ -55,7 +48,7 @@ Examples:
 		if len(info.Tags) > 0 {
 			fmt.Printf("Tags:        %v\n", info.Tags)
 		}
-		fmt.Printf("Host:        %s\n", cfg.Host)
+		fmt.Printf("Host:        %s\n", c.Host())
 		fmt.Println("Status:      Connected")
 
 		return nil
