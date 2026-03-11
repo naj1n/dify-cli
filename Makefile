@@ -1,4 +1,5 @@
-VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
+_VERSION_RAW := $(shell git describe --tags --always --dirty 2>/dev/null | tr -dc 'a-zA-Z0-9._-')
+VERSION ?= $(if $(_VERSION_RAW),$(_VERSION_RAW),dev)
 COMMIT  ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo "none")
 DATE    ?= $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 LDFLAGS := -s -w \
