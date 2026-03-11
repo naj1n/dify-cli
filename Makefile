@@ -16,7 +16,7 @@ test:
 	go test -race ./...
 
 lint:
-	golangci-lint run
+	golangci-lint run --fix
 
 fmt:
 	gofmt -l -w .

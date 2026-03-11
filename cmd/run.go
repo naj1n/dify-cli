@@ -150,7 +150,8 @@ func runStreaming(c *client.Client, inputs map[string]interface{}) error {
 					Title  string `json:"title"`
 				} `json:"data"`
 			}
-			if err := json.Unmarshal([]byte(event.Data), &e); err == nil && e.Data.Status == "failed" {
+			if err := json.Unmarshal([]byte(event.Data), &e); err == nil &&
+				e.Data.Status == "failed" {
 				fmt.Fprintf(stderr, "[node failed: %s]\n", e.Data.Title)
 			}
 
@@ -178,8 +179,10 @@ func init() {
 	addAppFlags(runCmd)
 	runCmd.Flags().StringVarP(&runInputs, "inputs", "i", "", "Input variables as JSON string")
 	runCmd.Flags().StringVarP(&runUser, "user", "u", "cli-user", "User identifier")
-	runCmd.Flags().StringVarP(&runResponseMode, "mode", "m", "blocking", "Response mode: blocking or streaming")
+	runCmd.Flags().
+		StringVarP(&runResponseMode, "mode", "m", "blocking", "Response mode: blocking or streaming")
 	runCmd.Flags().StringVarP(&runInputFile, "file", "f", "", "Load inputs from a JSON file")
-	runCmd.Flags().StringVarP(&runOutput, "output", "o", "", "Write output to file (useful for parallel runs)")
+	runCmd.Flags().
+		StringVarP(&runOutput, "output", "o", "", "Write output to file (useful for parallel runs)")
 	rootCmd.AddCommand(runCmd)
 }

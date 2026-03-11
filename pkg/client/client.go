@@ -80,7 +80,10 @@ type RunWorkflowRequest struct {
 	Files        []interface{}          `json:"files,omitempty"`
 }
 
-func (c *Client) RunWorkflow(inputs map[string]interface{}, user, responseMode string) ([]byte, error) {
+func (c *Client) RunWorkflow(
+	inputs map[string]interface{},
+	user, responseMode string,
+) ([]byte, error) {
 	body := RunWorkflowRequest{
 		Inputs:       inputs,
 		ResponseMode: responseMode,
@@ -105,7 +108,11 @@ type SSEEvent struct {
 
 type StreamCallback func(event SSEEvent)
 
-func (c *Client) RunWorkflowStream(inputs map[string]interface{}, user string, callback StreamCallback) error {
+func (c *Client) RunWorkflowStream(
+	inputs map[string]interface{},
+	user string,
+	callback StreamCallback,
+) error {
 	body := RunWorkflowRequest{
 		Inputs:       inputs,
 		ResponseMode: "streaming",
@@ -166,7 +173,11 @@ func (c *Client) StopWorkflow(taskID, user string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	req, err := c.newRequest(http.MethodPost, "/workflows/tasks/"+taskID+"/stop", bytes.NewReader(data))
+	req, err := c.newRequest(
+		http.MethodPost,
+		"/workflows/tasks/"+taskID+"/stop",
+		bytes.NewReader(data),
+	)
 	if err != nil {
 		return nil, err
 	}

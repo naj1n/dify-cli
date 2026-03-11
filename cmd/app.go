@@ -115,7 +115,11 @@ var appDefaultCmd = &cobra.Command{
 		}
 
 		if _, ok := cfg.Apps[name]; !ok {
-			return fmt.Errorf("app %q not found. Register it first: dify app add %s <api_key>", name, name)
+			return fmt.Errorf(
+				"app %q not found. Register it first: dify app add %s <api_key>",
+				name,
+				name,
+			)
 		}
 
 		cfg.DefaultApp = name

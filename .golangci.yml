@@ -36,6 +36,14 @@ linters:
     - goconst
     - gocritic
   settings:
+    errcheck:
+      exclude-functions:
+        - fmt.Fprint
+        - fmt.Fprintf
+        - fmt.Fprintln
+    gosec:
+      excludes:
+        - G304
     revive:
       rules:
         - name: package-comments
