@@ -75,7 +75,7 @@ func getOutputWriter() (io.Writer, func(), error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create output file: %w", err)
 	}
-	return f, func() { f.Close() }, nil
+	return f, func() { _ = f.Close() }, nil
 }
 
 func runBlocking(c *client.Client, inputs map[string]interface{}) error {

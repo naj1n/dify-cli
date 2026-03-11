@@ -51,7 +51,7 @@ func (c *Client) do(req *http.Request) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -119,7 +119,7 @@ func (c *Client) RunWorkflowStream(inputs map[string]interface{}, user string, c
 	if err != nil {
 		return fmt.Errorf("request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		errBody, _ := io.ReadAll(resp.Body)
@@ -189,7 +189,7 @@ func (c *Client) UploadFile(filePath, user string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	var buf bytes.Buffer
 	writer := multipart.NewWriter(&buf)
@@ -204,7 +204,9 @@ func (c *Client) UploadFile(filePath, user string) ([]byte, error) {
 	if err := writer.WriteField("user", user); err != nil {
 		return nil, err
 	}
-	writer.Close()
+	if err := writer.Close(); err != nil {
+		return nil, err
+	}
 
 	u := c.baseURL + "/files/upload"
 	req, err := http.NewRequest(http.MethodPost, u, &buf)

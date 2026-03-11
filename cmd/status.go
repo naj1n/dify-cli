@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"dify-cli/pkg/client"
 	"dify-cli/pkg/config"
 
 	"github.com/spf13/cobra"
@@ -23,11 +24,15 @@ Examples:
 		if err != nil {
 			return err
 		}
-
-		c, err := newClient()
+		if err := cfg.ValidateHost(); err != nil {
+			return err
+		}
+		apiKey, err := cfg.ResolveAPIKey(flagKey, flagApp)
 		if err != nil {
 			return err
 		}
+
+		c := client.New(cfg.Host, apiKey)
 
 		data, err := c.GetAppInfo()
 		if err != nil {
