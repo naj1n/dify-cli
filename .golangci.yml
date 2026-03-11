@@ -16,7 +16,6 @@ linters:
         - fmt.Fprint
         - fmt.Fprintf
         - fmt.Fprintln
-        - (io.Closer).Close
 
 issues:
   max-issues-per-linter: 50
