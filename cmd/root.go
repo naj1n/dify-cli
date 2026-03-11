@@ -11,13 +11,20 @@ import (
 )
 
 var (
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
+)
+
+var (
 	flagApp string
 	flagKey string
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "dify",
-	Short: "Dify CLI - interact with Dify workflow APIs",
+	Use:     "dify",
+	Short:   "Dify CLI - interact with Dify workflow APIs",
+	Version: version + " (commit: " + commit + ", built: " + date + ")",
 	Long: `Dify CLI is a command-line tool for interacting with Dify managed
 or self-hosted instances. It supports executing workflows, uploading
 files, viewing logs, and more through the Dify Service API.
