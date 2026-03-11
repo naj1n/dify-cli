@@ -189,7 +189,7 @@ func (c *Client) UploadFile(filePath, user string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	var buf bytes.Buffer
 	writer := multipart.NewWriter(&buf)
@@ -204,7 +204,9 @@ func (c *Client) UploadFile(filePath, user string) ([]byte, error) {
 	if err := writer.WriteField("user", user); err != nil {
 		return nil, err
 	}
-	writer.Close()
+	if err := writer.Close(); err != nil {
+		return nil, err
+	}
 
 	u := c.baseURL + "/files/upload"
 	req, err := http.NewRequest(http.MethodPost, u, &buf)
