@@ -45,7 +45,6 @@ formatters:
   enable:
     - gofmt
     - golines
-    - swaggo
 
 issues:
   max-issues-per-linter: 0
