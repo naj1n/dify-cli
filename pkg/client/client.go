@@ -16,6 +16,7 @@ import (
 )
 
 type Client struct {
+	host       string
 	baseURL    string
 	apiKey     string
 	httpClient *http.Client
@@ -27,10 +28,16 @@ func New(host, apiKey string) *Client {
 		base += "/v1"
 	}
 	return &Client{
+		host:       strings.TrimRight(host, "/"),
 		baseURL:    base,
 		apiKey:     apiKey,
 		httpClient: &http.Client{Timeout: 5 * time.Minute},
 	}
+}
+
+// Host returns the base host URL (without /v1 suffix).
+func (c *Client) Host() string {
+	return c.host
 }
 
 func (c *Client) newRequest(method, path string, body io.Reader) (*http.Request, error) {
